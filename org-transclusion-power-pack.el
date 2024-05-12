@@ -37,7 +37,7 @@ If the point is on a line starting with #+transclude:, add it."
   "Alias for `org-transclusion-make-from-link'.")
 
 (defalias 'tr-expand-all 'org-transclusion-add-all
-  "Alias for `tr-toggle-transclusion'.")
+  "Alias for `org-transclusion-add-all'.")
 
 (defalias 'tr-expand-or-collapse-tranclusion 'tr-toggle-transclusion
   "Alias for `tr-toggle-transclusion'.")
@@ -53,14 +53,6 @@ If the point is on a line starting with #+transclude:, add it."
   (beginning-of-line))
 
 ;; Function to insert a transclusion org-roam link
-(defun tr-convert-link-to-transclusion ()
-  "Insert a transclusion org-roam link."
-  (interactive)
-  (beginning-of-line)
-  (insert "#+transclude: ")
-  (beginning-of-line))
-
-
 (defun tr-convert-link-to-transclusion ()
  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
  (interactive)
