@@ -1,4 +1,4 @@
-;;; org-transclusion-power-pack.el --- Enhancements for org-transclusion package -*- lexical-binding: t; -*-
+;;; Org-transclusion-power-pack.el --- Enhancements for org-transclusion package -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024 Jay Dixit
 
@@ -14,7 +14,7 @@
 
 ;; Toggle transclusion on or off
 (defun tr-toggle-transclusion ()
-  "Toggle org transclusion based on the current context.
+  "Toggle org transclusion on or off based on the current context.
 If the point is on a transclusion, remove it.
 If the point is on a line starting with #+transclude:, add it."
   (interactive)
@@ -24,7 +24,6 @@ If the point is on a line starting with #+transclude:, add it."
       (if (string-prefix-p "#+transclude:" line)
           (org-transclusion-add)
         (message "Not on a transclusion or a #+transclude: keyword.")))))
-
 
 ;; Define user-friendly aliases for common transclusion functions
 (defalias 'tr-expand 'org-transclusion-add
@@ -42,7 +41,6 @@ If the point is on a line starting with #+transclude:, add it."
 (defalias 'tr-expand-or-collapse-tranclusion 'tr-toggle-transclusion
   "Alias for `tr-toggle-transclusion'.")
 
-
 ;; Function to insert a transclusion org-roam link
 (defun tr-insert-transclusion ()
   "Insert a transclusion org-roam link."
@@ -52,18 +50,17 @@ If the point is on a line starting with #+transclude:, add it."
   (insert "#+transclude: ")
   (beginning-of-line))
 
-;; Function to insert a transclusion org-roam link
+;; Function to convert a link to a transclusion
 (defun tr-convert-link-to-transclusion ()
  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
  (interactive)
  (let ((link (org-element-context)))
-  (if (and (eq (car link) 'link) (member (org-element-property :type link) '("file" "id")))
+  (if (eq (car link) 'link)
     (progn
      (goto-char (org-element-property :begin link))
      (insert "#+transclude: ")
      (beginning-of-line))
    (message "Point is not on a valid Org-mode or Org-roam link."))))
-
 
 (define-key org-mode-map (kbd "s-M") 'tr-toggle-transclusion)
 (define-key org-mode-map (kbd "S-s-<down>") 'tr-insert-transclusion)
