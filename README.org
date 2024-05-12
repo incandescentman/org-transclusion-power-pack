@@ -1,26 +1,26 @@
 
 
 * Org-transclusion power pack
+This suite of enhancements aims to streamline the process of working with transclusions in Org documents, making it more intuitive and efficient.
 
-These enhancements aim to streamline the process of working with transclusions in Org documents, making it more intuitive and efficient.
+** Enhanced Functionality
 
-**** Enhanced Functionality
-1. *Toggle Transclusion*:
+*** Toggle Transclusion
 
- - *Function*: ~tr-toggle-transclusion~
- - *Description*: Toggle transclusion on or off with a single keystroke. If the point is on a line starting with ~#+transclude:~, it expands it. If the point is on a transclusion, it collapses it.
- - *Usage*: Use this function to quickly toggle transclusions without having to think about whether you're expanding or collapsing transclusion states.
+- *Function*: `tr-toggle-transclusion`
+- *Description*: Toggle transclusion on or off with a single keystroke. If the point is on a line starting with `#+transclude:`, it expands it. If the point is on a transclusion, it collapses it.
+- *Usage*: Use this function to quickly toggle transclusions without having to determine whether you're expanding or collapsing transclusion states.
 
-2. *Alias Definitions*:
+*** Alias Definitions
 
- - *Aliases*:
-  - ~tr-expand~ for ~org-transclusion-add~
-  - ~tr-collapse~ for ~org-transclusion-remove~
-  - ~tr-make-link~ for ~org-transclusion-make-from-link~
-  - ~tr-expand-or-collapse~ for ~org-transclusion-add-or-remove~
- - *Description*: Shorter and more intuitive command names are provided as aliases to the existing transclusion commands, simplifying recall.
+- *Aliases*:
+ - `tr-expand` for `org-transclusion-add`
+ - `tr-collapse` for `org-transclusion-remove`
+ - `tr-make-link` for `org-transclusion-make-from-link`
+ - `tr-expand-or-collapse` for `org-transclusion-add-or-remove`
+- *Description*: Provides shorter and more intuitive command names as aliases to the existing transclusion commands, simplifying recall.
 
-3. *Insert Transclusion Links*:
+*** Insert Transclusion Links
 
- - *Function*: ~tr-insert-transclusion~
- - *Description*: Inserts transclusion links by integrating with ~org-roam-node-insert~. Automatically prepends ~#+transclude:~ to the links.
+- *Function*: `tr-insert-transclusion`
+- *Description*: Inserts transclusion links by integrating with `org-roam-node-insert`. Automatically prepends `#+transclude:` to the links.
