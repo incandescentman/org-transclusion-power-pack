@@ -111,8 +111,7 @@ Insert the level into the buffer after the word \":level \"."
      (beginning-of-line))
    (message "Point is not on a valid Org-mode or Org-roam link."))))
 
-
-;; Function to convert a link to a transclusion
+;; Function to convert a link to a transclusion and match level
 (defun tr-convert-link-to-transclusion-match-level ()
  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
  (interactive)
