@@ -1,7 +1,23 @@
+* Introduction
+This document details a suite of enhancements developed for the Emacs package `org-transclusion`, which facilitates the embedding of content from one Org file into another dynamically. These enhancements aim to streamline the transclusion process, making it more intuitive and efficient.
 
+* Prerequisites
+- Emacs version 28 or higher
+- Org-mode version 9 or higher
+- org-transclusion package
 
-* Org-transclusion power pack
-This suite of enhancements aims to streamline the process of working with transclusions in Org documents, making it more intuitive and efficient.
+* Installation
+1. Ensure that `org-transclusion` is installed and properly configured in your Emacs.
+2. Clone/download the enhancements from [repository URL].
+3. Add the following lines to your Emacs configuration:
+
+#+BEGIN_QUOTE emacs-lisp
+(load "path/to/enhancements.el")
+#+END_QUOTE
+
+4. Restart Emacs to apply the changes.
+
+* Org-transclusion Power Pack
 
 ** Enhanced Functionality
 
@@ -14,13 +30,14 @@ This suite of enhancements aims to streamline the process of working with transc
 *** Alias Definitions
 
 - *Aliases*:
- - `tr-expand` for `org-transclusion-add`
- - `tr-collapse` for `org-transclusion-remove`
- - `tr-make-link` for `org-transclusion-make-from-link`
- - `tr-expand-or-collapse` for `org-transclusion-add-or-remove`
+- `tr-expand` for `org-transclusion-add`
+- `tr-collapse` for `org-transclusion-remove`
+- `tr-make-link` for `org-transclusion-make-from-link`
+- `tr-expand-or-collapse` for `org-transclusion-add-or-remove`
 - *Description*: Provides shorter and more intuitive command names as aliases to the existing transclusion commands, simplifying recall.
 
 *** Insert Transclusion Links
 
 - *Function*: `tr-insert-transclusion`
 - *Description*: Inserts transclusion links by integrating with `org-roam-node-insert`. Automatically prepends `#+transclude:` to the links.
+
