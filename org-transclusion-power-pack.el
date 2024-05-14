@@ -66,25 +66,6 @@ Insert the level into the buffer after the word \":level \"."
 (defun tr-insert-transclusion-match-level ()
   "Insert a transclusion org-roam link at the appropriate heading level."
   (interactive)
-  ;; Step 1: Call org-roam-node-insert to insert the link
-  (org-roam-node-insert)
-  ;; Step 2: Capture the inserted link
-  (let ((link (buffer-substring-no-properties
-               (line-beginning-position)
-               (line-end-position))))
-    ;; Step 3: Delete the inserted link
-    (delete-region (line-beginning-position) (line-end-position))
-    ;; Step 4: Add '#+transclude:' at the beginning of the current line
-    (beginning-of-line)
-    (insert (format "#+transclude: %s" link))
-    ;; Step 5: Move to the end of the line
-    (end-of-line)
-    ;; Step 6: Add ':level x' where x is the current org-heading level plus one
-    (insert-current-org-heading-level-plus-one)))
-
-(defun tr-insert-transclusion-match-level ()
-  "Insert a transclusion org-roam link at the appropriate heading level."
-  (interactive)
   ;; Ensure org-roam is available before proceeding.
   (if (fboundp 'org-roam-node-insert)
       (progn
