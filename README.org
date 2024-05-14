@@ -30,10 +30,10 @@ This document details a suite of enhancements developed for the Emacs package `o
 *** Alias Definitions
 
 - *Aliases*:
-- `tr-expand` for `org-transclusion-add`
-- `tr-collapse` for `org-transclusion-remove`
-- `tr-make-link` for `org-transclusion-make-from-link`
-- `tr-expand-or-collapse` for `org-transclusion-add-or-remove`
+ - `tr-expand` for `org-transclusion-add`
+ - `tr-collapse` for `org-transclusion-remove`
+ - `tr-make-link` for `org-transclusion-make-from-link`
+ - `tr-expand-or-collapse` for `org-transclusion-add-or-remove`
 - *Description*: Provides shorter and more intuitive command names as aliases to the existing transclusion commands, simplifying recall.
 
 *** Insert Transclusion Links
@@ -41,3 +41,22 @@ This document details a suite of enhancements developed for the Emacs package `o
 - *Function*: `tr-insert-transclusion`
 - *Description*: Inserts transclusion links by integrating with `org-roam-node-insert`. Automatically prepends `#+transclude:` to the links.
 
+*** Insert Transclusion Links with Matched Heading Level
+
+- *Function*: `tr-insert-transclusion-match-level`
+- *Description*: Inserts a transclusion link via `org-roam-node-insert` and adjusts the heading level to match the current context, ensuring seamless document structure integration.
+- *Usage*: Ideal for users who want to maintain consistent heading levels across transcluded sections, enhancing the document's organization and readability.
+
+*** Convert Link to Transclusion
+
+- *Function*: `tr-convert-link-to-transclusion`
+- *Description*: Converts an existing Org-mode or Org-roam link at the cursor position into a transclusion link by prepending the `#+transclude:` directive.
+- *Usage*: Useful for quickly transforming regular links into dynamic content embeddings, simplifying the workflow for document assembly.
+
+*** Convert Link to Transclusion with Matched Heading Level
+
+- *Function*: `tr-convert-link-to-transclusion-match-level`
+- *Description*: Similar to `tr-convert-link-to-transclusion`, but also appends a `:level` directive to match the current heading level, ensuring that the transcluded content aligns perfectly with the surrounding structure.
+- *Usage*: Best suited for complex documents where maintaining a consistent heading hierarchy is crucial for readability and navigation.
+
+These enhancements are designed to make working with transclusions in Org documents not only more powerful but also more intuitive. By simplifying and automating common tasks, they allow users to focus more on content creation and less on manual formatting.
