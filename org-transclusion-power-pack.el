@@ -63,18 +63,6 @@ Insert the level into the buffer after the word \":level \"."
   (insert "#+transclude: ")
   (beginning-of-line))
 
-;; Function to insert a transclusion org-roam link and match level
-(defun tr-insert-transclusion-match-level ()
-  "Insert a transclusion org-roam link."
-  (interactive)
-  (org-roam-node-insert)
-  (beginning-of-line)
-  (insert "#+transclude: ")
-  (end-of-line)
-  (insert-current-org-heading-level-plus-one)
-  (beginning-of-line))
-
-
 (defun tr-insert-transclusion-match-level ()
   "Insert a transclusion org-roam link at the appropriate heading level."
   (interactive)
@@ -92,12 +80,26 @@ Insert the level into the buffer after the word \":level \"."
     ;; Step 5: Move to the end of the line
     (end-of-line)
     ;; Step 6: Add ':level x' where x is the current org-heading level plus one
-    (insert-current-org-heading-level-plus-one))
-  ;; Step 7: Ensure formatting is proper, move back to the heading
-  ;; (org-back-to-heading)
+    (insert-current-org-heading-level-plus-one)))
+
+(defun tr-insert-transclusion-match-level ()
+  "Insert a transclusion org-roam link at the appropriate heading level."
+  (interactive)
+  ;; Ensure org-roam is available before proceeding.
+  (if (fboundp 'org-roam-node-insert)
+      (progn
+        (org-roam-node-insert)
+        (let ((link (buffer-substring-no-properties
+                     (line-beginning-position)
+                     (line-end-position))))
+          (delete-region (line-beginning-position) (line-end-position))
+          (insert (format "#+transclude: %s" link))
+          (end-of-line)
+          (insert-current-org-heading-level-plus-one)
+          (beginning-of-line))
+        (message "Transclusion link inserted with matched heading level."))
+    (message "org-roam not available. Please ensure org-roam is installed and loaded."))
   )
-
-
 
 ;; Function to convert a link to a transclusion
 (defun tr-convert-link-to-transclusion ()
@@ -124,7 +126,6 @@ Insert the level into the buffer after the word \":level \"."
      (insert-current-org-heading-level-plus-one)
      (beginning-of-line))
    (message "Point is not on a valid Org-mode or Org-roam link."))))
-
 
 
 
