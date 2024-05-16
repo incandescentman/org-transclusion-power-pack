@@ -1,5 +1,11 @@
 * Introduction
-This document details a suite of enhancements developed for the Emacs package `org-transclusion`, which facilitates the embedding of content from one Org file into another dynamically. These enhancements aim to streamline the transclusion process, making it more intuitive and efficient.
+A suite of enhancements for the Emacs package `org-transclusion`, which allows you to dynamically display content from one org file in another.
+
+Enhancements include:
+- toggle transclusions on and off with a single keystroke
+- a function to add an org-roam node as a transclusion
+- a function to add transclusion and match current org-heading level
+- more intuitive function names for easier navigation
 
 * Prerequisites
 - Emacs version 28 or higher
