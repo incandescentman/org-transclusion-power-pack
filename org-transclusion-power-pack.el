@@ -12,7 +12,18 @@
 
 ;;; Code:
 
-;; patch this
+;; 0) Define fallback for older Org if `org-in-property-drawer-p` is missing:
+(unless (fboundp 'org-in-property-drawer-p)
+  (defun org-in-property-drawer-p ()
+    "Return non-nil if point is in a property drawer.
+This is a fallback for older Org versions (<9.6)."
+    (let* ((elem (org-element-at-point))
+           (etype (org-element-type elem)))
+      (eq etype 'property-drawer))))
+
+
+
+;; Your other patched functions here...
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,6 +140,17 @@ This function is a patched version of the original. It:
       nil)))
   )
 
+
+
+;; Add a fallback implementation of org-in-property-drawer-p
+(unless (fboundp 'org-in-property-drawer-p)
+  (defun org-in-property-drawer-p ()
+    "Return non-nil if point is in a property drawer.
+This is a fallback implementation for older Org versions."
+    (let ((element (org-element-at-point)))
+      (and element
+           (eq (org-element-type element) 'node-property)
+           (eq (org-element-type (org-element-property :parent element)) 'property-drawer)))))
 
 
 (defun tr-toggle-transclusion ()
