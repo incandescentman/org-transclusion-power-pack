@@ -257,6 +257,72 @@ Insert the level into the buffer after the word \":level \"."
       (message "Point is not on a valid Org-mode or Org-roam link."))))
 
 
+(defun tr-toggle-transclusion-other-window ()
+  "Toggle org transclusion at point and show source in other window.
+- If point is inside an active transclusion, remove it.
+- If point is on a line starting with `#+transclude:`, add the transclusion
+  and display the source in another window, using an existing window if available.
+- Otherwise, show a helpful message."
+  (interactive)
+  (cond
+   ;; Case 1: inside a transcluded region
+   ((org-transclusion-within-transclusion-p)
+    (org-transclusion-remove))
+
+   ;; Case 2: on a #+transclude: line
+   ((save-excursion
+      (beginning-of-line)
+      (looking-at-p "[ \t]*#\\+transclude:"))
+    (let ((current-win (selected-window))
+          (other-win (if (> (count-windows) 1)
+                         (next-window)
+                       nil)))
+      ;; Add the transclusion first
+      (org-transclusion-add)
+
+      ;; If transclusion was added successfully, open source in other window
+      (when (org-transclusion-within-transclusion-p)
+        ;; Get source buffer
+        (let* ((pair-overlay (get-text-property (point) 'org-transclusion-pair))
+               (source-buffer (when pair-overlay (overlay-buffer pair-overlay))))
+          (when source-buffer
+            ;; Use existing other window if available
+            (if other-win
+                (progn
+                  (select-window other-win)
+                  (switch-to-buffer source-buffer)
+                  (select-window current-win))
+              ;; Otherwise use org-transclusion's native function
+              (org-transclusion-open-source t)))))))
+
+   ;; Otherwise: fallback message
+   (t
+    (message "Point is not in a transclusion or on a #+transclude: line."))))
+
+;; Add a keybinding for it
+;; (define-key org-mode-map (kbd "C-s-M") 'tr-toggle-transclusion)
+
+(defun tr-toggle-transclusion-indirect-indirect-buffer ()
+  "Toggle transclusion at point in a separate indirect buffer/window."
+  (interactive)
+  (let ((orig-buffer (current-buffer))
+        (orig-point  (point)))
+    ;; If already in a transclusion, remove it from the current buffer
+    (if (org-transclusion-within-transclusion-p)
+        (org-transclusion-remove)
+      ;; Else create an indirect buffer
+      (let* ((indirect-name (generate-new-buffer-name (buffer-name orig-buffer)))
+             (indirect-buf  (clone-indirect-buffer indirect-name nil)))
+        ;; Show that indirect buffer in a right-side window
+        (select-window (split-window-right))
+        (switch-to-buffer indirect-buf)
+        (goto-char orig-point)
+        ;; Now toggle transclusion *inside this indirect buffer*:
+        (tr-toggle-transclusion)
+        (recenter)
+        ;; Finally, switch back to original window/buffer
+        (other-window 1)))))
+
 
 (define-key org-mode-map (kbd "s-M") 'tr-toggle-transclusion)
 (define-key org-mode-map (kbd "S-s-<down>") 'tr-insert-transclusion-match-level)
