@@ -302,7 +302,7 @@ Insert the level into the buffer after the word \":level \"."
 ;; Add a keybinding for it
 ;; (define-key org-mode-map (kbd "C-s-M") 'tr-toggle-transclusion)
 
-(defun tr-toggle-transclusion-indirect-indirect-buffer ()
+(defun tr-toggle-transclusion-indirect-buffer ()
   "Toggle transclusion at point in a separate indirect buffer/window."
   (interactive)
   (let ((orig-buffer (current-buffer))
@@ -325,6 +325,7 @@ Insert the level into the buffer after the word \":level \"."
 
 
 (define-key org-mode-map (kbd "s-M") 'tr-toggle-transclusion)
+;; (define-key org-mode-map (kbd "s-M") 'tr-toggle-transclusion-indirect-buffer)
 (define-key org-mode-map (kbd "S-s-<down>") 'tr-insert-transclusion-match-level)
 
 (provide 'org-transclusion-power-pack)
