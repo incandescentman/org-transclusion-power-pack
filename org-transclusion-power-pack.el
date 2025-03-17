@@ -14,53 +14,121 @@
 
 ;; patch this
 
-(defun org-transclusion-content-org-buffer-or-element (only-element plist)
-  "Return a list of payload for transclusion..."
-  (let* ((el (org-element-context))
-         (type (org-element-type el))
-         (beg (org-element-property :begin el))
-         (end (org-element-property :end el))
-         (only-contents (plist-get plist :only-contents))
-         (exclude-elements (org-transclusion-keyword-plist-to-exclude-elements plist))
-         (expand-links (plist-get plist :expand-links)))
-    ;; If we can't find a valid element, just do the entire buffer
-    (if (or (null el) (null beg) (null end))
-        ;; The entire buffer:
-        (progn
-          (message "Could not find an Org element at point. Fallback to entire buffer.")
-          (list :src-content (buffer-string)
-                :src-buf (current-buffer)
-                :src-beg (point-min)
-                :src-end (point-max)))
-      ;; Else do the normal logic...
-      (when only-element
-        (narrow-to-region beg end))
-      ;; ... rest of your code for exclude-elements, only-contents, etc.
-      )))
 
-(defun org-transclusion-content-org-marker (marker plist)
-  "Return a list of payload from MARKER and PLIST."
-  (if (and marker (marker-buffer marker) (buffer-live-p (marker-buffer marker)))
-      (with-current-buffer (marker-buffer marker)
-        (org-with-wide-buffer
-         (goto-char marker)
-         ;; If we land in a property drawer, climb up to the heading
-         (while (and (org-in-property-drawer-p)
-                     (org-up-heading-safe)))
-         ;; Or, if we want to be more thorough, we can walk up until we get a
-         ;; headline or top-level element
-         (let* ((el   (org-element-context))
-                (type (org-element-type el)))
-           ;; If we still can’t get a valid element with :begin, fallback
-           (if (or (null el) (null (org-element-property :begin el)))
-               ;; fallback: entire buffer
-               (org-transclusion-content-org-buffer-or-element nil plist)
-             ;; else do the usual
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 1) A patched version of `org-transclusion-content-org-buffer-or-element`
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(with-eval-after-load 'org-transclusion
+  ;; put the two patched defuns here
+  (defun org-transclusion-content-org-buffer-or-element (only-element plist)
+    "Return a list of payload for transclusion.
+This function is a patched version of the original. It:
+- Falls back to entire buffer if we can't find a valid element.
+- Otherwise processes an Org element and respects :only-contents, :exclude-elements, etc."
+    (let* ((el (org-element-context))
+           (type (when el (org-element-type el)))
+           (beg (org-element-property :begin el))
+           (end (org-element-property :end el))
+           (only-contents (plist-get plist :only-contents))
+           (exclude-elements (org-transclusion-keyword-plist-to-exclude-elements plist))
+           (expand-links (plist-get plist :expand-links)))
+      ;; If we can't find a valid element, just do the entire buffer
+      (if (or (null el) (null beg) (null end))
+          (progn
+            (message "org-transclusion: no valid element => fallback to entire buffer.")
+            (list :src-content (buffer-string)
+                  :src-buf (current-buffer)
+                  :src-beg (point-min)
+                  :src-end (point-max)))
+
+        ;; We do have a valid element. Optionally narrow to *just* that element:
+        (when only-element
+          (narrow-to-region beg end))
+
+        ;; Now parse the buffer (or region) to apply filters, expansions, etc.
+        (let ((obj (org-element-parse-buffer)))
+          ;; 1) Exclude certain elements
+          (let ((org-transclusion-exclude-elements
+                 (append exclude-elements org-transclusion-exclude-elements)))
+            (setq obj (org-element-map obj org-element-all-elements
+                        #'org-transclusion-content-filter-org-exclude-elements
+                        nil nil org-element-all-elements nil)))
+
+          ;; 2) If not only-element, also consider skipping the “first section,”
+          ;;    unless :org-transclusion-include-first-section is set (the user can adapt).
+          (unless only-element
+            (setq obj (org-element-map obj org-element-all-elements
+                        #'org-transclusion-content-filter-org-first-section
+                        nil nil org-element-all-elements nil)))
+
+          ;; 3) If :only-contents is specified, remove headlines
+          (when only-contents
+            (setq obj (org-element-map obj org-element-all-elements
+                        #'org-transclusion-content-filter-org-only-contents
+                        nil nil '(section) nil)))
+
+          ;; 4) Expand links if asked
+          (when expand-links
+            (org-element-map obj 'link
+              #'org-transclusion-content-filter-expand-links))
+
+          ;; Finally interpret the parse tree back to a string
+          (let ((transcluded-text (org-element-interpret-data obj)))
+            (list :src-content transcluded-text
+                  :src-buf (current-buffer)
+                  :src-beg (point-min)
+                  :src-end (point-max)))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; 2) A patched version of `org-transclusion-content-org-marker`
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (defun org-transclusion-content-org-marker (marker plist)
+    "Return a payload from MARKER and PLIST, opening or climbing out if needed.
+1) If MARKER is (file . pos), open the file and convert to a real marker.
+2) If inside a property drawer, climb up to a heading.
+3) If still before first heading, transclude the entire buffer; otherwise just the element."
+    (cond
+     ((null marker)
+      (message "org-transclusion: no marker => no transclusion.")
+      nil)
+
+     ;; If we have a (file . pos) but not a live marker, open the file and move there:
+     ((consp marker)
+      (let* ((filename (car marker))
+             (pos (cdr marker))
+             (buf (find-file-noselect filename)))
+        (with-current-buffer buf
+          (goto-char pos)
+          (org-transclusion-content-org-marker (point-marker) plist))))
+
+     ;; If we do have a real marker:
+     ((markerp marker)
+      (let ((src-buf (marker-buffer marker)))
+        (if (not (buffer-live-p src-buf))
+            (progn
+              (message "org-transclusion: marker buffer is dead => no transclusion.")
+              nil)
+          (with-current-buffer src-buf
+            (org-with-wide-buffer
+             (goto-char marker)
+             ;; If we land in a property drawer, climb up to the heading
+             (while (and (org-in-property-drawer-p)
+                         (org-up-heading-safe)))
+             ;; Now check if we're before the first heading
              (if (org-before-first-heading-p)
+                 ;; Transclude the entire buffer, or the first section, depending on your config
                  (org-transclusion-content-org-buffer-or-element nil plist)
-               (org-transclusion-content-org-buffer-or-element 'only-element plist))))))
-    (message "Nothing done. Cannot find marker for the ID.")
-    nil))
+               ;; Otherwise do 'only-element'
+               (org-transclusion-content-org-buffer-or-element 'only-element plist)))))))
+
+     (t
+      (message "org-transclusion: unknown marker type => no transclusion.")
+      nil)))
+  )
+
 
 
 (defun tr-toggle-transclusion ()
