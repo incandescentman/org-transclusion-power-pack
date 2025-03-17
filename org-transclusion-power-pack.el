@@ -153,6 +153,17 @@ This is a fallback implementation for older Org versions."
            (eq (org-element-type (org-element-property :parent element)) 'property-drawer)))))
 
 
+(with-eval-after-load 'org-transclusion
+  ;; Make sure these extensions are loaded
+  (add-to-list 'org-transclusion-extensions 'org-transclusion-indent-mode)
+  (add-to-list 'org-transclusion-extensions 'org-transclusion-font-lock))
+
+(setq org-hide-leading-stars t)
+
+(add-hook 'org-mode-hook #'org-indent-mode)
+
+
+
 (defun tr-toggle-transclusion ()
   "Toggle org transclusion at point.
 
