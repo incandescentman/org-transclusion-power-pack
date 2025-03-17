@@ -12,18 +12,76 @@
 
 ;;; Code:
 
-;; Toggle transclusion on or off
+;; patch this
+
+(defun org-transclusion-content-org-buffer-or-element (only-element plist)
+  "Return a list of payload for transclusion..."
+  (let* ((el (org-element-context))
+         (type (org-element-type el))
+         (beg (org-element-property :begin el))
+         (end (org-element-property :end el))
+         (only-contents (plist-get plist :only-contents))
+         (exclude-elements (org-transclusion-keyword-plist-to-exclude-elements plist))
+         (expand-links (plist-get plist :expand-links)))
+    ;; If we can't find a valid element, just do the entire buffer
+    (if (or (null el) (null beg) (null end))
+        ;; The entire buffer:
+        (progn
+          (message "Could not find an Org element at point. Fallback to entire buffer.")
+          (list :src-content (buffer-string)
+                :src-buf (current-buffer)
+                :src-beg (point-min)
+                :src-end (point-max)))
+      ;; Else do the normal logic...
+      (when only-element
+        (narrow-to-region beg end))
+      ;; ... rest of your code for exclude-elements, only-contents, etc.
+      )))
+
+(defun org-transclusion-content-org-marker (marker plist)
+  "Return a list of payload from MARKER and PLIST."
+  (if (and marker (marker-buffer marker) (buffer-live-p (marker-buffer marker)))
+      (with-current-buffer (marker-buffer marker)
+        (org-with-wide-buffer
+         (goto-char marker)
+         ;; If we land in a property drawer, climb up to the heading
+         (while (and (org-in-property-drawer-p)
+                     (org-up-heading-safe)))
+         ;; Or, if we want to be more thorough, we can walk up until we get a
+         ;; headline or top-level element
+         (let* ((el   (org-element-context))
+                (type (org-element-type el)))
+           ;; If we still can’t get a valid element with :begin, fallback
+           (if (or (null el) (null (org-element-property :begin el)))
+               ;; fallback: entire buffer
+               (org-transclusion-content-org-buffer-or-element nil plist)
+             ;; else do the usual
+             (if (org-before-first-heading-p)
+                 (org-transclusion-content-org-buffer-or-element nil plist)
+               (org-transclusion-content-org-buffer-or-element 'only-element plist))))))
+    (message "Nothing done. Cannot find marker for the ID.")
+    nil))
+
+
 (defun tr-toggle-transclusion ()
-  "Toggle org transclusion on or off based on the current context.
-If the point is on a transclusion, remove it.
-If the point is on a line starting with #+transclude:, add it."
+  "Toggle org transclusion at point.
+
+- If point is inside an active transclusion, remove it.
+- If point is on a line starting with `#+transclude:`, add the transclusion.
+- Otherwise, show a helpful message."
   (interactive)
-  (if (org-transclusion-within-transclusion-p)
-      (org-transclusion-remove)
-    (let ((line (thing-at-point 'line t)))
-      (if (string-prefix-p "#+transclude:" line)
-          (org-transclusion-add)
-        (message "Not on a transclusion or a #+transclude: keyword.")))))
+  (cond
+   ;; Case 1: inside a transcluded region
+   ((org-transclusion-within-transclusion-p)
+    (org-transclusion-remove))
+   ;; Case 2: on a #+transclude: line
+   ((save-excursion
+      (beginning-of-line)
+      (looking-at-p "[ \t]*#\\+transclude:"))
+    (org-transclusion-add))
+   ;; Otherwise: fallback message
+   (t
+    (message "Point is not in a transclusion or on a #+transclude: line."))))
 
 ;; Define user-friendly aliases for common transclusion functions
 (defalias 'tr-expand 'org-transclusion-add
@@ -84,29 +142,29 @@ Insert the level into the buffer after the word \":level \"."
 
 ;; Function to convert a link to a transclusion
 (defun tr-convert-link-to-transclusion ()
- "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
- (interactive)
- (let ((link (org-element-context)))
-  (if (eq (car link) 'link)
-    (progn
-     (goto-char (org-element-property :begin link))
-     (insert "#+transclude: ")
-     (beginning-of-line))
-   (message "Point is not on a valid Org-mode or Org-roam link."))))
+  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
+  (interactive)
+  (let ((link (org-element-context)))
+    (if (eq (car link) 'link)
+        (progn
+          (goto-char (org-element-property :begin link))
+          (insert "#+transclude: ")
+          (beginning-of-line))
+      (message "Point is not on a valid Org-mode or Org-roam link."))))
 
 ;; Function to convert a link to a transclusion and match level
 (defun tr-convert-link-to-transclusion-match-level ()
- "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
- (interactive)
- (let ((link (org-element-context)))
-  (if (eq (car link) 'link)
-    (progn
-     (goto-char (org-element-property :begin link))
-     (insert "#+transclude: ")
-     (end-of-line)
-     (insert-current-org-heading-level-plus-one)
-     (beginning-of-line))
-   (message "Point is not on a valid Org-mode or Org-roam link."))))
+  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
+  (interactive)
+  (let ((link (org-element-context)))
+    (if (eq (car link) 'link)
+        (progn
+          (goto-char (org-element-property :begin link))
+          (insert "#+transclude: ")
+          (end-of-line)
+          (insert-current-org-heading-level-plus-one)
+          (beginning-of-line))
+      (message "Point is not on a valid Org-mode or Org-roam link."))))
 
 
 
