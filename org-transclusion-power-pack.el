@@ -82,31 +82,55 @@ Insert the level into the buffer after the word \":level \"."
     (message "org-roam not available. Please ensure org-roam is installed and loaded."))
   )
 
+
+(defun tr-insert-transclusion-match-level ()
+  "Insert a transclusion org-roam link at the appropriate heading level."
+  (interactive)
+  ;; Display the function name to distinguish it from similar functions
+  (message "Please select a node for transclusion")
+  (sit-for .5)  ;; Pause for 1 second
+  ;; Ensure org-roam is available before proceeding.
+  (if (fboundp 'org-roam-node-insert)
+      (progn
+        (org-roam-node-insert)
+        (let ((link (buffer-substring-no-properties
+                     (line-beginning-position)
+                     (line-end-position))))
+          (delete-region (line-beginning-position) (line-end-position))
+          (insert (format "#+transclude: %s" link))
+          (end-of-line)
+          (insert-current-org-heading-level-plus-one)
+          (beginning-of-line))
+        (message "Transclusion link inserted with matched heading level."))
+    (message "org-roam not available. Please ensure org-roam is installed and loaded.")))
+
+
+
 ;; Function to convert a link to a transclusion
 (defun tr-convert-link-to-transclusion ()
- "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
- (interactive)
- (let ((link (org-element-context)))
-  (if (eq (car link) 'link)
-    (progn
-     (goto-char (org-element-property :begin link))
-     (insert "#+transclude: ")
-     (beginning-of-line))
-   (message "Point is not on a valid Org-mode or Org-roam link."))))
+  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
+  (interactive)
+  (let ((link (org-element-context)))
+    (if (eq (car link) 'link)
+        (progn
+          (goto-char (org-element-property :begin link))
+          (insert "#+transclude: ")
+          (beginning-of-line))
+      (message "Point is not on a valid Org-mode or Org-roam link."))))
 
 ;; Function to convert a link to a transclusion and match level
 (defun tr-convert-link-to-transclusion-match-level ()
- "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
- (interactive)
- (let ((link (org-element-context)))
-  (if (eq (car link) 'link)
-    (progn
-     (goto-char (org-element-property :begin link))
-     (insert "#+transclude: ")
-     (end-of-line)
-     (insert-current-org-heading-level-plus-one)
-     (beginning-of-line))
-   (message "Point is not on a valid Org-mode or Org-roam link."))))
+  "Convert an Org-mode or Org-roam link to a transclusion link if the point is on a link."
+  (interactive)
+  (let ((link (org-element-context)))
+    (if (eq (car link) 'link)
+        (progn
+          (goto-char (org-element-property :begin link))
+          (insert "#+transclude: ")
+          (end-of-line)
+          (insert-current-org-heading-level-plus-one)
+          (beginning-of-line))
+      (message "Point is not on a valid Org-mode or Org-roam link."))))
 
 
 
